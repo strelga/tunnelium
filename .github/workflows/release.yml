@@ -21,9 +21,11 @@ jobs:
           go-version: "1.22"
       - name: Build binaries
         run: |
-          GOOS=linux  GOARCH=amd64 go build -ldflags "-s -w" -o tunnelium-linux-amd64 ./cmd/tunnelium
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o tunnelium-darwin-amd64 ./cmd/tunnelium
-          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o tunnelium-darwin-arm64 ./cmd/tunnelium
+          VERSION="${GITHUB_REF_NAME#v}"
+          LDFLAGS="-s -w -X main.version=${VERSION}"
+          GOOS=linux  GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o tunnelium-linux-amd64 ./cmd/tunnelium
+          GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o tunnelium-darwin-amd64 ./cmd/tunnelium
+          GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o tunnelium-darwin-arm64 ./cmd/tunnelium
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
