@@ -38,22 +38,19 @@ publish: release
 		--title "v$(VERSION)" \
 		--generate-notes
 
-# Common bump-version template: computes NEW_VERSION, commits, tags, and pushes
-define bump_version
-	$(eval NEW_VERSION := $(shell echo "$(VERSION)" | awk -F. $(1)))
-	echo "$(NEW_VERSION)" > $(VERSION_FILE)
-	git add $(VERSION_FILE)
-	git commit -m "release: v$(NEW_VERSION)"
-	git tag v$(NEW_VERSION)
-	git push origin main v$(NEW_VERSION)
-	@echo "Released v$(NEW_VERSION) — CI will build and publish binaries"
-endef
-
-patch:
-	$(call bump_version,'{printf "%d.%d.%d", $$1, $$2, $$3+1}')
-
-minor:
-	$(call bump_version,'{printf "%d.%d.0", $$1, $$2+1}')
-
-major:
-	$(call bump_version,'{printf "%d.0.0", $$1+1}')
+patch minor major:
+	@v=$$(cat $(VERSION_FILE)) && \
+	major=$$(echo "$$v" | cut -d. -f1) && \
+	minor=$$(echo "$$v" | cut -d. -f2) && \
+	patch_num=$$(echo "$$v" | cut -d. -f3) && \
+	case "$@" in \
+	  patch) new="$$major.$$minor.$$((patch_num + 1))" ;; \
+	  minor) new="$$major.$$((minor + 1)).0" ;; \
+	  major) new="$$((major + 1)).0.0" ;; \
+	esac && \
+	echo "$$new" > $(VERSION_FILE) && \
+	git add $(VERSION_FILE) && \
+	git commit -m "release: v$$new" && \
+	git tag v$$new && \
+	git push origin main v$$new && \
+	echo "Released v$$new — CI will build and publish binaries"
