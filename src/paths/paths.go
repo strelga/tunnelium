@@ -56,7 +56,7 @@ func EnsureBaseDir() error {
 
 	composePath := ComposeFile()
 	if _, err := os.Stat(composePath); os.IsNotExist(err) {
-		if err := os.WriteFile(composePath, []byte("services:\n"), 0644); err != nil {
+		if err := os.WriteFile(composePath, []byte("services: {}\n"), 0644); err != nil {
 			return fmt.Errorf("creating %s: %w", composePath, err)
 		}
 	}

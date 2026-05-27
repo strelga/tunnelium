@@ -572,3 +572,101 @@ func TestAddServiceToCompose_GostServer(t *testing.T) {
 		t.Error("should contain relay+tls listen command")
 	}
 }
+
+// --- Null services key regression tests ---
+
+func TestAddServiceToCompose_NullServicesKey(t *testing.T) {
+	// Reproduce the bug: compose file has "services:\n" where the value is null, not a mapping.
+	// This is exactly what EnsureBaseDir used to create before the fix.
+	setupTempCompose(t, "services:\n")
+
+	params := ServiceParams{
+		ServiceType:     ServiceTypeGost,
+		InstanceName:    "incoming",
+		GostRole:        GostRoleClient,
+		GostSocksPort:   1081,
+		GostNextHopHost: "example.com",
+		GostNextHopPort: 443,
+	}
+
+	if err := AddServiceToCompose(params); err != nil {
+		t.Fatalf("AddServiceToCompose should succeed for null services key, got: %v", err)
+	}
+
+	data, err := os.ReadFile(paths.ComposeFile())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := string(data)
+	if !strings.Contains(result, "gost-incoming:") {
+		t.Error("should contain gost-incoming service")
+	}
+	if !strings.Contains(result, "1081:1081") {
+		t.Error("should contain port mapping 1081:1081")
+	}
+	if !strings.Contains(result, "relay+tls://example.com:443") {
+		t.Error("should contain relay+tls forward command")
+	}
+}
+
+func TestAddServiceToCompose_EmptyMappingServicesKey(t *testing.T) {
+	// New EnsureBaseDir format: "services: {}\n"
+	setupTempCompose(t, "services: {}\n")
+
+	params := ServiceParams{
+		ServiceType:     ServiceTypeGost,
+		InstanceName:    "cross-dc",
+		GostRole:        GostRoleClient,
+		GostSocksPort:   1081,
+		GostHTTPPort:    8081,
+		GostNextHopHost: "example.com",
+		GostNextHopPort: 443,
+	}
+
+	if err := AddServiceToCompose(params); err != nil {
+		t.Fatalf("AddServiceToCompose should succeed for empty mapping services key, got: %v", err)
+	}
+
+	data, err := os.ReadFile(paths.ComposeFile())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := string(data)
+	if !strings.Contains(result, "gost-cross-dc:") {
+		t.Error("should contain gost-cross-dc service")
+	}
+	if !strings.Contains(result, "1081:1081") {
+		t.Error("should contain SOCKS port mapping")
+	}
+	if !strings.Contains(result, "8081:8081") {
+		t.Error("should contain HTTP port mapping")
+	}
+}
+
+func TestGetExistingServices_NullServicesKey(t *testing.T) {
+	// GetExistingServices should handle null services key gracefully.
+	setupTempCompose(t, "services:\n")
+
+	services, err := GetExistingServices()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(services) != 0 {
+		t.Errorf("expected 0 services for null services key, got %d: %v", len(services), services)
+	}
+}
+
+func TestGetUsedPorts_NullServicesKey(t *testing.T) {
+	// GetUsedPorts should handle null services key gracefully.
+	setupTempCompose(t, "services:\n")
+
+	ports, err := GetUsedPorts()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ports) != 0 {
+		t.Errorf("expected 0 ports for null services key, got %d: %v", len(ports), ports)
+	}
+}

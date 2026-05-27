@@ -106,14 +106,33 @@ func AddServiceToCompose(params ServiceParams) error {
 		return fmt.Errorf("docker-compose.yaml: root is not a mapping")
 	}
 
-	services := findMappingValue(body, "services")
-	if services == nil {
+	servicesNode := findMappingValue(body, "services")
+	if servicesNode == nil {
 		return fmt.Errorf("docker-compose.yaml: 'services' key not found")
 	}
 
-	servicesMap, ok := services.(*ast.MappingNode)
+	servicesMap, ok := servicesNode.(*ast.MappingNode)
 	if !ok {
-		return fmt.Errorf("docker-compose.yaml: 'services' is not a mapping")
+		// services key exists but its value is null/empty (e.g. "services:\n" without children).
+		// Rewrite the file with an empty services mapping and re-parse so the AST is valid.
+		composePath := paths.ComposeFile()
+		if err := os.WriteFile(composePath, []byte("services: {}\n"), 0644); err != nil {
+			return fmt.Errorf("resetting %s: %w", composePath, err)
+		}
+		file, err = parseComposeFile()
+		if err != nil {
+			return fmt.Errorf("re-parsing %s: %w", composePath, err)
+		}
+		doc = file.Docs[0]
+		body, _ = doc.Body.(*ast.MappingNode)
+		servicesNode = findMappingValue(body, "services")
+		if servicesNode == nil {
+			return fmt.Errorf("docker-compose.yaml: 'services' key not found after reset")
+		}
+		servicesMap, ok = servicesNode.(*ast.MappingNode)
+		if !ok {
+			return fmt.Errorf("docker-compose.yaml: 'services' is still not a mapping after reset")
+		}
 	}
 
 	serviceName := fmt.Sprintf("%s-%s", params.ServiceType, params.InstanceName)
