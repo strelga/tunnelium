@@ -4,9 +4,47 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"tunnelium/src/paths"
 )
+
+// ServiceInfo holds information about a service for listing.
+type ServiceInfo struct {
+	Name      string // e.g. "gost-incoming"
+	Type      string // e.g. "gost"
+	Instance  string // e.g. "incoming"
+	ConfigDir string // path to config directory
+}
+
+// ListServices returns all services defined in docker-compose.yaml.
+func ListServices() ([]ServiceInfo, error) {
+	services, err := GetExistingServices()
+	if err != nil {
+		return nil, fmt.Errorf("reading existing services: %w", err)
+	}
+
+	var result []ServiceInfo
+	for _, name := range services {
+		info := ServiceInfo{
+			Name:      name,
+			ConfigDir: paths.ServiceDir(name),
+		}
+		// Parse type and instance from name (e.g. "gost-incoming" → "gost", "incoming")
+		if idx := strings.Index(name, "-"); idx >= 0 {
+			info.Type = name[:idx]
+			info.Instance = name[idx+1:]
+		}
+		result = append(result, info)
+	}
+
+	return result, nil
+}
+
+// ServiceNames returns the names of all services (for shell completion).
+func ServiceNames() ([]string, error) {
+	return GetExistingServices()
+}
 
 // Start runs `docker compose up -d` for the given service name.
 // The service name must match a key in docker-compose.yaml (e.g. "gost-incoming").

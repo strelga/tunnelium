@@ -190,6 +190,37 @@ Examples:
 
 	serviceCmd.AddCommand(serviceAddCmd)
 
+	// --- service list ---
+	serviceListCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all services",
+		Long:  "List all services defined in docker-compose.yaml.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			services, err := service.ListServices()
+			if err != nil {
+				return err
+			}
+			if len(services) == 0 {
+				fmt.Println("No services found")
+				return nil
+			}
+			for _, s := range services {
+				fmt.Printf("%-25s  type=%s  instance=%s  config=%s\n", s.Name, s.Type, s.Instance, s.ConfigDir)
+			}
+			return nil
+		},
+	}
+	serviceCmd.AddCommand(serviceListCmd)
+
+	// completion helper: returns service names for tab completion
+	serviceNameCompletion := func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		names, err := service.ServiceNames()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		return names, cobra.ShellCompDirectiveNoFileComp
+	}
+
 	// --- service start ---
 	serviceStartCmd := &cobra.Command{
 		Use:   "start <name>",
@@ -203,6 +234,7 @@ Examples:
 			fmt.Printf("Service %q started\n", args[0])
 			return nil
 		},
+		ValidArgsFunction: serviceNameCompletion,
 	}
 	serviceCmd.AddCommand(serviceStartCmd)
 
@@ -219,6 +251,7 @@ Examples:
 			fmt.Printf("Service %q stopped\n", args[0])
 			return nil
 		},
+		ValidArgsFunction: serviceNameCompletion,
 	}
 	serviceCmd.AddCommand(serviceStopCmd)
 
@@ -235,6 +268,7 @@ Examples:
 			fmt.Printf("Service %q restarted\n", args[0])
 			return nil
 		},
+		ValidArgsFunction: serviceNameCompletion,
 	}
 	serviceCmd.AddCommand(serviceRestartCmd)
 
