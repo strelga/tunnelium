@@ -4,28 +4,49 @@ VPN service manager for managing [gost](https://github.com/ginuerzh/gost) VPN an
 
 ## Installation
 
-### One-line install (Linux)
+### One-line install (Linux, system-wide)
 
 ```bash
-curl -fSL -o /usr/local/bin/tunnelium \
+curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/latest/download/tunnelium-linux-amd64 \
-  && chmod +x /usr/local/bin/tunnelium
+  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && rm /tmp/tunnelium
+```
+
+Downloads the binary to `/tmp`, then uses `sudo install` to place it with correct permissions (`0755`). Any user on the system can run it.
+
+### One-line install (Linux, no sudo)
+
+```bash
+mkdir -p ~/.local/bin \
+  && curl -fSL -o ~/.local/bin/tunnelium \
+     https://github.com/strelga/tunnelium/releases/latest/download/tunnelium-linux-amd64 \
+  && chmod +x ~/.local/bin/tunnelium
+```
+
+Make sure `~/.local/bin` is in your `$PATH`. On most modern Linux distros it already is. If not, add to your shell profile:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 ### macOS (Intel)
 
 ```bash
-curl -fSL -o /usr/local/bin/tunnelium \
+curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/latest/download/tunnelium-darwin-amd64 \
-  && chmod +x /usr/local/bin/tunnelium
+  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && rm /tmp/tunnelium
 ```
 
 ### macOS (Apple Silicon)
 
 ```bash
-curl -fSL -o /usr/local/bin/tunnelium \
+curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/latest/download/tunnelium-darwin-arm64 \
-  && chmod +x /usr/local/bin/tunnelium
+  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && rm /tmp/tunnelium
 ```
 
 ### Specific version
@@ -33,9 +54,10 @@ curl -fSL -o /usr/local/bin/tunnelium \
 Replace `latest/download` with `download/v<VERSION>` to pin a version:
 
 ```bash
-curl -fSL -o /usr/local/bin/tunnelium \
+curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/download/v0.0.2/tunnelium-linux-amd64 \
-  && chmod +x /usr/local/bin/tunnelium
+  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && rm /tmp/tunnelium
 ```
 
 ## Usage
