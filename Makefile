@@ -7,17 +7,19 @@ VERSION := $(shell cat $(VERSION_FILE) 2>/dev/null || echo "0.0.0")
 .PHONY: build build-linux build-darwin build-darwin-arm64 release \
         test clean publish patch minor major
 
+LDFLAGS = -ldflags "-s -w -X main.version=$(VERSION)"
+
 build:
-	go build -o $(BINARY) ./cmd/tunnelium
+	go build $(LDFLAGS) -o $(BINARY) ./cmd/tunnelium
 
 build-linux:
-	GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o $(BINARY)-linux-amd64 ./cmd/tunnelium
+	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY)-linux-amd64 ./cmd/tunnelium
 
 build-darwin:
-	GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o $(BINARY)-darwin-amd64 ./cmd/tunnelium
+	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY)-darwin-amd64 ./cmd/tunnelium
 
 build-darwin-arm64:
-	GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o $(BINARY)-darwin-arm64 ./cmd/tunnelium
+	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY)-darwin-arm64 ./cmd/tunnelium
 
 release: build-linux build-darwin build-darwin-arm64
 

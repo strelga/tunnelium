@@ -12,12 +12,86 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var version = "dev"
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "tunnelium",
 		Short: "VPN service manager",
 		Long:  "VPN service manager for managing gost VPN and proxy services.",
 	}
+
+	rootCmd.SetVersionTemplate("tunnelium {{.Version}}\n")
+	rootCmd.Version = version
+
+	// --- completion ---
+	completionCmd := &cobra.Command{
+		Use:   "completion [bash|zsh|fish|powershell]",
+		Short: "Generate shell completion scripts",
+		Long: `Generate shell completion scripts for tunnelium.
+
+To load completions:
+
+Bash:
+
+	 # Load completions in your current shell session
+	 source <(tunnelium completion bash)
+
+	 # Run this once to install completions for all new sessions (macOS):
+	 tunnelium completion bash > $(brew --prefix)/etc/bash_completion.d/tunnelium
+
+	 # Run this once to install completions for all new sessions (Linux):
+	 tunnelium completion bash > /etc/bash_completion.d/tunnelium
+
+Zsh:
+
+	 # Load completions in your current shell session
+	 source <(tunnelium completion zsh)
+
+	 # If shell completion is not already enabled in your environment,
+	 # you will need to enable it. You can execute the following once:
+	 echo "autoload -U compinit; compinit" >> ~/.zshrc
+
+	 # Then, run this once to install the completion file:
+	 tunnelium completion zsh > "${fpath[1]}/_tunnelium"
+
+	 # You will need to start a new shell for this setup to take effect.
+
+Fish:
+
+	 # Load completions in your current shell session
+	 tunnelium completion fish | source
+
+	 # Run this once to install completions for all new sessions:
+	 tunnelium completion fish > ~/.config/fish/completions/tunnelium.fish
+
+PowerShell:
+
+	 # Load completions in your current shell session
+	 tunnelium completion powershell | Out-String | Invoke-Expression
+
+	 # Run this once to install completions for all new sessions:
+	 tunnelium completion powershell > tunnelium.ps1
+	 # and source this file from your PowerShell profile.
+`,
+		DisableFlagsInUseLine: true,
+		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+		Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			switch args[0] {
+			case "bash":
+				return cmd.Root().GenBashCompletion(os.Stdout)
+			case "zsh":
+				return cmd.Root().GenZshCompletion(os.Stdout)
+			case "fish":
+				return cmd.Root().GenFishCompletion(os.Stdout, true)
+			case "powershell":
+				return cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+			}
+			return nil
+		},
+	}
+	rootCmd.AddCommand(completionCmd)
 
 	// --- service ---
 	serviceCmd := &cobra.Command{
