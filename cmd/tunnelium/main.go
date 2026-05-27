@@ -38,11 +38,11 @@ Bash:
 	 # Load completions in your current shell session
 	 source <(tunnelium completion bash)
 
-	 # Run this once to install completions for all new sessions (macOS):
+	 # Run this once to install completions for all new sessions (macOS with Homebrew):
 	 tunnelium completion bash > $(brew --prefix)/etc/bash_completion.d/tunnelium
 
-	 # Run this once to install completions for all new sessions (Linux):
-	 tunnelium completion bash > /etc/bash_completion.d/tunnelium
+	 # Run this once to install completions for all new sessions (Linux, bash-completion v2):
+	 tunnelium completion bash | sudo tee /usr/share/bash-completion/completions/tunnelium > /dev/null
 
 Zsh:
 
@@ -190,6 +190,54 @@ Examples:
 
 	serviceCmd.AddCommand(serviceAddCmd)
 
+	// --- service start ---
+	serviceStartCmd := &cobra.Command{
+		Use:   "start <name>",
+		Short: "Start a service",
+		Long:  "Start a service by name (e.g. gost-incoming). Runs docker compose up -d.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := service.Start(args[0]); err != nil {
+				return err
+			}
+			fmt.Printf("Service %q started\n", args[0])
+			return nil
+		},
+	}
+	serviceCmd.AddCommand(serviceStartCmd)
+
+	// --- service stop ---
+	serviceStopCmd := &cobra.Command{
+		Use:   "stop <name>",
+		Short: "Stop a service",
+		Long:  "Stop a service by name (e.g. gost-incoming). Runs docker compose stop.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := service.Stop(args[0]); err != nil {
+				return err
+			}
+			fmt.Printf("Service %q stopped\n", args[0])
+			return nil
+		},
+	}
+	serviceCmd.AddCommand(serviceStopCmd)
+
+	// --- service restart ---
+	serviceRestartCmd := &cobra.Command{
+		Use:   "restart <name>",
+		Short: "Restart a service",
+		Long:  "Restart a service by name (e.g. gost-incoming). Runs docker compose restart.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := service.Restart(args[0]); err != nil {
+				return err
+			}
+			fmt.Printf("Service %q restarted\n", args[0])
+			return nil
+		},
+	}
+	serviceCmd.AddCommand(serviceRestartCmd)
+
 	// --- gost ---
 	gostCmd := &cobra.Command{
 		Use:   "gost",
@@ -308,7 +356,7 @@ func printServiceAdded(params *service.ServiceParams) {
 	}
 
 	fmt.Printf("\nNext steps:\n")
-	fmt.Printf("  1. Start:       docker compose -f %s up -d %s\n", paths.ComposeFile(), serviceName)
+	fmt.Printf("  1. Start:       tunnelium service start %s\n", serviceName)
 	if params.GostRole == service.GostRoleClient && params.GostSocksPort > 0 {
 		fmt.Printf("  2. Add users:   tunnelium gost socks-user create %s <username>\n", params.InstanceName)
 	}
