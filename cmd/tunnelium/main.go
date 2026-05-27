@@ -8,6 +8,7 @@ import (
 	"tunnelium/src/gost/socks"
 	"tunnelium/src/paths"
 	"tunnelium/src/service"
+	"tunnelium/src/update"
 
 	"github.com/spf13/cobra"
 )
@@ -92,6 +93,17 @@ PowerShell:
 		},
 	}
 	rootCmd.AddCommand(completionCmd)
+
+	// --- self-update ---
+	selfUpdateCmd := &cobra.Command{
+		Use:   "self-update",
+		Short: "Update tunnelium to the latest version from GitHub",
+		Long:  "Download and replace the current binary with the latest release from GitHub.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return update.Run(version)
+		},
+	}
+	rootCmd.AddCommand(selfUpdateCmd)
 
 	// --- service ---
 	serviceCmd := &cobra.Command{

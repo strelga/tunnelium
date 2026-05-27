@@ -4,16 +4,18 @@ VPN service manager for managing [gost](https://github.com/ginuerzh/gost) VPN an
 
 ## Installation
 
+> **Important:** The binary must be owned by your user (not root) for `tunnelium self-update` to work. All install examples below use `-o $(whoami)` so that `sudo install` sets the owner to the current user.
+
 ### One-line install (Linux, system-wide)
 
 ```bash
 curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/latest/download/tunnelium-linux-amd64 \
-  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && sudo install -m 0755 -o $(whoami) /tmp/tunnelium /usr/local/bin/tunnelium \
   && rm /tmp/tunnelium
 ```
 
-Downloads the binary to `/tmp`, then uses `sudo install` to place it with correct permissions (`0755`). Any user on the system can run it.
+Uses `sudo install` to place the binary in `/usr/local/bin` with correct permissions, owned by the current user.
 
 ### One-line install (Linux, no sudo)
 
@@ -36,7 +38,7 @@ source ~/.bashrc
 ```bash
 curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/latest/download/tunnelium-darwin-amd64 \
-  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && sudo install -m 0755 -o $(whoami) /tmp/tunnelium /usr/local/bin/tunnelium \
   && rm /tmp/tunnelium
 ```
 
@@ -45,7 +47,7 @@ curl -fSL -o /tmp/tunnelium \
 ```bash
 curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/latest/download/tunnelium-darwin-arm64 \
-  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && sudo install -m 0755 -o $(whoami) /tmp/tunnelium /usr/local/bin/tunnelium \
   && rm /tmp/tunnelium
 ```
 
@@ -56,13 +58,14 @@ Replace `latest/download` with `download/v<VERSION>` to pin a version:
 ```bash
 curl -fSL -o /tmp/tunnelium \
   https://github.com/strelga/tunnelium/releases/download/v0.0.2/tunnelium-linux-amd64 \
-  && sudo install -m 0755 /tmp/tunnelium /usr/local/bin/tunnelium \
+  && sudo install -m 0755 -o $(whoami) /tmp/tunnelium /usr/local/bin/tunnelium \
   && rm /tmp/tunnelium
 ```
 
 ## Usage
 
 ```
+tunnelium self-update          # Update to the latest version from GitHub
 tunnelium service add          # Add a new service (interactive or via flags)
 tunnelium service list         # List configured services
 tunnelium service remove       # Remove a service
